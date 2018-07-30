@@ -4,15 +4,27 @@ const bcrypt = require('bcrypt-nodejs');
 const cors = require('cors');
 const knex = require('knex')
 
+
+const http = require('http');
+  http.createServer(function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    }).listen(3001, "127.0.0.1");
+console.log('Server running at http://127.0.0.1:3001/');
+
 const db = knex({
   client: 'pg',
   connection: {
     host : '127.0.0.1',
-    user : 'aneagoie',
+    user : 'postgres',
     password : '',
     database : 'smart-brain'
   }
 });
+
+console.log(db.select('*').from('users')
+          .then((data => {
+            console.log(data);
+          })));
 
 const app = express();
 
@@ -42,7 +54,17 @@ app.post('/signin', (req, res) => {
     .catch(err => res.status(400).json('wrong credentials'))
 })
 
-app.post('/register', (req, res) => {
+app.post('/register', (req,res) => {
+  const { email, name, password } = req.body;
+  db('users').insert({
+    email: email,
+    name: name,
+    password: password,
+    joined: new Date()
+  }).then(console.log)
+})
+
+/* app.post('/register', (req, res) => {
   const { email, name, password } = req.body;
   const hash = bcrypt.hashSync(password);
     db.transaction(trx => {
@@ -68,7 +90,7 @@ app.post('/register', (req, res) => {
       .catch(trx.rollback)
     })
     .catch(err => res.status(400).json('unable to register'))
-})
+}) */
 
 app.get('/profile/:id', (req, res) => {
   const { id } = req.params;
@@ -94,6 +116,6 @@ app.put('/image', (req, res) => {
   .catch(err => res.status(400).json('unable to get entries'))
 })
 
-app.listen(3000, ()=> {
-  console.log('app is running on port 3000');
+app.listen(3001, ()=> {
+  console.log('app is running on port 3001');
 })
